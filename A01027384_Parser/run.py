@@ -2,6 +2,8 @@
 
 from globalTypes import *
 from customParser import *
+from mainSemantica import *
+
 f = open('sample.c-', 'r')
 programa = f.read()
 print("programa", programa)
@@ -13,4 +15,6 @@ posicion = 0  # lee todo el archivo a compilar
 # posición del caracter actual del string
 # función para pasar los valores iniciales de las variables globales
 globales(programa, posicion, progLong)
+
 AST = parser(True)
+semantica(AST, True)
