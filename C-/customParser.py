@@ -40,8 +40,6 @@ class Parser:
             ErrorNode: Nodo del tipo ErrorNode
         """
 
-        print(
-            f"Error: {error_msg} en la posicion {self.line}:{self.column}, lexema inesperado '{lexema}'")
 
         err = ErrorNode(lexema=lexema, column=self.column,
                         line=self.line, errorMessage=error_msg)
@@ -63,8 +61,6 @@ class Parser:
         Returns:
             bool: True si el token coincide, False en caso contrario
         """
-        print(
-            f"Token: {self.token}, Lexema: {self.token_lexema}, Arr: {token_arr}")
 
         if self.token in token_arr or force:
             self.prev_token = self.token
@@ -119,7 +115,6 @@ class Parser:
             n_child = self.create_error_node(
                 self.token, self.token_lexema, "Error de segmentación")
 
-            print("PPPP", n_child.token, n_child.lexema)
 
         if n:
             n.child.append(n_child)
@@ -130,7 +125,6 @@ class Parser:
             n_child = self.create_error_node(
                 self.token, self.token_lexema, "Error de segmentación")
 
-            print("DDD", n_child.token, n_child.lexema)
 
             return n_child
 
@@ -147,9 +141,7 @@ class Parser:
             n_child = self.params_tk()
             n_c = None
 
-            print(self.token, self.token_lexema)
             self.match([TokenType.ID])
-            print(self.token, self.token_lexema)
 
             if self.token == TokenType.PCLOSE:
                 n_close = self.create_node(self.token, self.token_lexema)
@@ -200,7 +192,6 @@ class Parser:
         Returns:
             Node: Devuelve un nodo que representa el conjunto de parametros
         """
-        print("params_tk")
         n_child = []
         n = self.create_node("params", "params")
         n_child.append(self.param_tk())
@@ -695,27 +686,25 @@ def parser(imprimir):
     parser = Parser()
     acl, error = parser.parser()
 
-    print(" ")
-    print(" ")
-    print(" ")
-    print("-------------------------------------------------------------")
-
-    if error:
-        print(
-            f"Error: {error.errorMessage} en la posicion {error.line}:{error.column}, lexema inesperado '{error.lexema}'")
-
-    else:
-        print("No se encontraron errores en el procesamiento del arbol")
-
-    print("-------------------------------------------------------------")
-    print(" ")
 
     if imprimir:
-        print("|>", acl)
+        print(" ")
+        print(" ")
+        print(" ")
+        print("-------------------------------------------------------------")
 
-    print_tree(acl)
+        if error:
+            print(
+                f"Error: {error.errorMessage} en la posicion {error.line}:{error.column}, lexema inesperado '{error.lexema}'")
 
-    return acl
+        else:
+            print("No se encontraron errores en el procesamiento del arbol")
+
+        print("-------------------------------------------------------------")
+        print(" ")
+        print_tree(acl)
+
+    return acl, error
 
 
 def globales(prog, pos, long_):

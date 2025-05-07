@@ -6,7 +6,6 @@ from mainSemantica import *
 
 f = open('sample.c-', 'r')
 programa = f.read()
-print("programa", programa)
 progLong = len(programa)
 programa = programa + '$'
 posicion = 0  # lee todo el archivo a compilar
@@ -16,5 +15,9 @@ posicion = 0  # lee todo el archivo a compilar
 # función para pasar los valores iniciales de las variables globales
 globales(programa, posicion, progLong)
 
-AST = parser(True)
-semantica(AST, True)
+ERROR = False
+AST, ERROR = parser(False)
+
+if not ERROR:
+    print("---------------- Semantica ----------------")
+    semantica(AST, True)
