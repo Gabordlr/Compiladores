@@ -261,9 +261,6 @@ def checkiddng_types(node, scope):
 
 
 def checking_types(node, scope):
-    # print(
-    #     f"Checking types in node: {node.lexema} of token {node.token} in scope: {scope}")
-
     if node is None:
         return True
 
@@ -285,8 +282,6 @@ def checking_types(node, scope):
 
     elif node.token in comparison_operators:
 
-        # print(
-        #     f"->: Left child: {node.child[0].lexema}, Right child: {node.child[1].lexema} -- {node.line}")
         left_child = checking_types(node.child[0], scope)
         right_child = checking_types(node.child[1], scope)
 
@@ -295,8 +290,6 @@ def checking_types(node, scope):
                 node.lexema, node.line, "Invalid expression")
             return False
 
-        # print(
-        #     f"Left child: {left_child}, Right child: {right_child}")
         if left_child.type != right_child.type:
             create_error(
                 node.lexema, node.line, "Types do not match")
@@ -353,8 +346,6 @@ def checking_types(node, scope):
                 return False
 
         t = var_type.get('type', VarType('error', None))
-
-        # print("type: ", t)
 
         return t
 
