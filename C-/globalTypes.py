@@ -35,6 +35,10 @@ class TokenType(Enum):
     VOID = 31
     RETURN = 32
     WHILE = 33
+    FUNCTION = 34
+    VARIABLE = 35
+    PARAMS = 36
+    POSITION = 37
 
 
 class CharMap(Enum):
@@ -133,6 +137,14 @@ comparison_operators = [
     TokenType.NIGUAL    # !=
 ]
 
+operation_operators = [
+    TokenType.SUMA,     # +
+    TokenType.RESTA,    # -
+    TokenType.MULT,     # *
+    TokenType.DIV,      # /
+    TokenType.ASIGNAR   # =
+]
+
 # -------- Parser -------------
 
 
@@ -158,9 +170,17 @@ class ExpKind(Enum):
 
 
 class ExpType(Enum):
-    Void = 0
-    Integer = 1
-    Boolean = 2
+    void = 0
+    int = 1
+    arr = 2
+    error = 3
+
+
+class VarType():
+    def __init__(self, name, size=None, param=False):
+        self.type = name
+        self.size = size
+        self.params = param
 
 
 class TreeNode:
@@ -172,6 +192,7 @@ class TreeNode:
         self.lexema = lexema   # tipo NodeKind, en globalTypes
         self.line = line
         self.column = column
+        self.parent = None
 
 
 class ErrorNode:

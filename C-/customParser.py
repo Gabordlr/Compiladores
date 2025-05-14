@@ -40,7 +40,6 @@ class Parser:
             ErrorNode: Nodo del tipo ErrorNode
         """
 
-
         err = ErrorNode(lexema=lexema, column=self.column,
                         line=self.line, errorMessage=error_msg)
 
@@ -115,7 +114,6 @@ class Parser:
             n_child = self.create_error_node(
                 self.token, self.token_lexema, "Error de segmentación")
 
-
         if n:
             n.child.append(n_child)
 
@@ -125,7 +123,6 @@ class Parser:
             n_child = self.create_error_node(
                 self.token, self.token_lexema, "Error de segmentación")
 
-
             return n_child
 
     def fun_tk(self):
@@ -134,7 +131,7 @@ class Parser:
         Returns:
             Node: Devuelve un nodo que representa la funcion marcada por un nodo (function)
         """
-        n = self.create_node("function", "function")
+        n = self.create_node(TokenType.FUNCTION, "function")
         n_open = self.create_node(self.token, self.token_lexema)
 
         if self.match([TokenType.POPEN]):
@@ -146,9 +143,6 @@ class Parser:
             if self.token == TokenType.PCLOSE:
                 n_close = self.create_node(self.token, self.token_lexema)
                 self.match([TokenType.PCLOSE])
-
-                n_child.child.insert(0, n_open)
-                n_child.child.append(n_close)
 
                 if self.token == TokenType.LLOPEN:
                     n_c = self.compound_tk()
@@ -193,7 +187,7 @@ class Parser:
             Node: Devuelve un nodo que representa el conjunto de parametros
         """
         n_child = []
-        n = self.create_node("params", "params")
+        n = self.create_node(TokenType.PARAMS, "params")
         n_child.append(self.param_tk())
 
         while self.token == TokenType.COMA:
@@ -234,8 +228,6 @@ class Parser:
 
             n_close = self.create_node(self.token, self.token_lexema)
             if self.match([TokenType.LLCLOSE]):
-                n_child.child.insert(0, n_open)
-                n_child.child.append(n_close)
 
                 return n_child
 
@@ -361,6 +353,11 @@ class Parser:
         n = self.create_node(self.token, self.token_lexema)
 
         if n:
+            if n.token == TokenType.SEMICOLON:
+                n = self.create_error_node(
+                    self.token, self.token_lexema, "Error de segmentación")
+                return n
+
             n_child = self.add_exp_tk()
 
             return n_child
@@ -413,7 +410,9 @@ class Parser:
             elif self.token == TokenType.ASIGNAR:
                 new_n = self.sin_exp_tk()
 
-                n.child.append(new_n)
+                new_n.child.insert(0, n)
+
+                return new_n
 
             return n
 
@@ -513,7 +512,7 @@ class Parser:
             if self.token == TokenType.PCLOSE:
                 n_close = self.create_node(self.token, self.token_lexema)
                 self.match([TokenType.PCLOSE])
-                n.child = [n_open, n_child, n_close]
+                n.child = [n_child]
 
                 n_new = self.term_exp_tk()
 
@@ -564,7 +563,7 @@ class Parser:
         Returns:
             Node: Variable con posicion en caso de ser una posicion
         """
-        n_t = self.create_node("posición", "posición")
+        n_t = self.create_node(TokenType.POSITION, "posición")
         n = self.create_node(self.token, self.token_lexema)
 
         if self.match([TokenType.ID]):
@@ -576,7 +575,7 @@ class Parser:
 
                 n_close = self.create_node(self.token, self.token_lexema)
                 if self.match([TokenType.BCLOSE]):
-                    n_t.child = [n_open, n_child, n_close]
+                    n_t.child = [n_child]
 
                 n.child.append(n_t)
 
@@ -592,19 +591,19 @@ class Parser:
 
         if self.match([TokenType.ID]):
             if self.token == TokenType.BOPEN:
-                n_t = self.create_node("posición", "posición")
+                n_t = self.create_node(TokenType.POSITION, "posición")
                 n_open = self.create_node(self.token, self.token_lexema)
                 self.match([TokenType.BOPEN])
                 n_child = self.exp_tk()
 
                 n_close = self.create_node(self.token, self.token_lexema)
                 if self.match([TokenType.BCLOSE]):
-                    n_t.child = [n_open, n_child, n_close]
+                    n_t.child = [n_child]
 
                 n.child.append(n_t)
 
             elif self.token == TokenType.POPEN:
-                n_t = self.create_node("params", "params")
+                n_t = self.create_node(TokenType.PARAMS, "params")
                 n_t.child = self.def_calls_tk()
                 n.child.append(n_t)
 
@@ -616,7 +615,7 @@ class Parser:
         Returns:
             Node: Devuelve un nodo que representa la declaracion de variable
         """
-        n = self.create_node("variable", "variable")
+        n = self.create_node(TokenType.VARIABLE, "variable")
         n_open = self.create_node(self.token, self.token_lexema)
         n_child = None
 
@@ -629,7 +628,7 @@ class Parser:
                 self.match([TokenType.BCLOSE])
 
                 if n_child:
-                    n.child = [n_open, n_child, n_close]
+                    n.child = [n_child]
                 else:
                     n.child = [n_open, n_close]
 
@@ -658,8 +657,6 @@ class Parser:
 
             n_close = self.create_node(self.token, self.token_lexema)
             if self.match([TokenType.PCLOSE]):
-                n_child.insert(0, n_open)
-                n_child.append(n_close)
 
                 return n_child
 
@@ -685,7 +682,6 @@ class Parser:
 def parser(imprimir):
     parser = Parser()
     acl, error = parser.parser()
-
 
     if imprimir:
         print(" ")
