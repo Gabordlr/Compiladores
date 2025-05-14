@@ -16,7 +16,7 @@ posicion = 0  # lee todo el archivo a compilar
 globales(programa, posicion, progLong)
 
 ERROR = False
-AST, ERROR = parser(True)
+AST, ERROR = parser(False)
 
 
 if not ERROR:

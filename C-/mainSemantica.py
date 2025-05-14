@@ -6,10 +6,21 @@ scope_stack = []  # Stack of symbol tables (dicts)
 location_counter = 0  # Memory address counter for variables
 current_function = None  # Track current function name
 scope_info = {}  # Store scope information in a hashtable
+ERROR = False  # Global error flag
+error_message = []  # Error message for debugging
 
 
 def scope_push():
     scope_stack.append({})
+
+
+def create_error(name, lineno, message):
+    global ERROR, error_message
+    ERROR = True
+    error_message.append(
+        f"Error: Variable '{name}' {message} at line {lineno}")
+
+    return VarType('error', None)
 
 
 def scope_pop():
@@ -44,7 +55,7 @@ def st_add(name, lineno, loc):
                        "type": VarType(global_val['type'].type, global_val['type'].size)}
     else:
         table[name] = {"lines": [lineno], "location": loc,
-                       "type": VarType('error', None)}
+                       "type": create_error(name, lineno, "not defined")}
 
 
 def st_lookup(name, index=None):
@@ -72,7 +83,6 @@ def checking_function_params(node):
     if node is None:
         return True
     params_arr = []
-    print("____________________", node.token)
     children = node.child[0]
 
     if children.token == TokenType.PARAMS:
@@ -119,7 +129,8 @@ def get_node_type(node):
     if resp:
         return VarType(resp['type'].type, resp['type'].size)
 
-    return VarType('error', None)  # Default to error type if none found
+    # Default to error type if none found
+    return create_error(node.token, node.lineno, "")
 
 
 def annotate_parents(node, parent=None):
@@ -131,7 +142,7 @@ def annotate_parents(node, parent=None):
 
 
 def traverse(t, preProc, postProc):
-    global current_function, scope_info
+    global current_function, scope_info, ERROR, error_message
 
     if t is None:
         return
@@ -157,12 +168,33 @@ def traverse(t, preProc, postProc):
         }
         scope_pop()
 
-        resp = postProc(t, current_function)
-        print(f"Tipo de nodo: {t.token}, Tipo de función: {resp}")
-        if not resp:
-            print(f"Error de tipo en la línea {t.line}: {resp}")
+        resp = False
+
+        if not ERROR:
+            resp = postProc(t, current_function)
+            if not resp:
+                printing_errors(current_function, "Typing error")
+                ERROR = False
+
+            else:
+                print(
+                    f"Type cheking for '{current_function}' processed successfully.")
+        else:
+            printing_errors(current_function, "Semantic error")
+            ERROR = False
 
         current_function = None
+
+
+def printing_errors(current_function, error_type):
+    global error_message
+    if error_message:
+        print(f"\n{error_type} in function '{current_function}':")
+        print(20*"-")
+        print(error_message[0])
+        print(20*"-")
+
+        error_message = []
 
 
 def insertNode(t):
@@ -223,13 +255,14 @@ def print_symbol_tables():
                 f"{name:<10} {type_str:<8} {data['location']:<5} {lines_str}")
 
 
-def check3ing_types(node, scope):
+def checkiddng_types(node, scope):
+    print("Checking types")
     return True
 
 
 def checking_types(node, scope):
-    print(
-        f"Checking types in node: {node.lexema} of token {node.token} in scope: {scope}")
+    # print(
+    #     f"Checking types in node: {node.lexema} of token {node.token} in scope: {scope}")
 
     if node is None:
         return True
@@ -238,32 +271,35 @@ def checking_types(node, scope):
         left_child = checking_types(node.child[0], scope)
         right_child = checking_types(node.child[1], scope)
 
-        print(
-            f"Comparando tipos: {left_child} y {right_child}")
-
         if not left_child or not right_child:
+            create_error(
+                node.lexema, node.line, "Invalid expression")
             return False
 
         if left_child.type != right_child.type:
-            print(
-                f"Error de tipo en la línea {node.line}: {left_child.type} no es compatible con {right_child.type}")
+            create_error(
+                node.lexema, node.line, "Types do not match")
             return False
 
         return left_child
 
     elif node.token in comparison_operators:
+
+        # print(
+        #     f"->: Left child: {node.child[0].lexema}, Right child: {node.child[1].lexema} -- {node.line}")
         left_child = checking_types(node.child[0], scope)
         right_child = checking_types(node.child[1], scope)
 
-        print(
-            f"Comparando tipos: {left_child.type} y {right_child.type}")
-
         if not left_child or not right_child:
+            create_error(
+                node.lexema, node.line, "Invalid expression")
             return False
 
+        # print(
+        #     f"Left child: {left_child}, Right child: {right_child}")
         if left_child.type != right_child.type:
-            print(
-                f"Error de tipo en la línea {node.line}: {left_child.type} no es compatible con {right_child.type}")
+            create_error(
+                node.lexema, node.line, "Types do not match")
             return False
 
         return left_child
@@ -273,63 +309,56 @@ def checking_types(node, scope):
             return VarType('int', None)
 
         if node.child[0].token == TokenType.PARAMS and node.token != TokenType.FUNCTION:
-            print(
-                f"Comparando tipos: {node.child[0].token} y {node.token}")
             if node.child[0].child:
                 var_type = scope_stack[0].get(node.lexema, None)
+
                 if len(node.child[0].child) != len(var_type['type'].params):
-                    print(
-                        f"Error de tipo en la línea {node.line}: {len(node.child[0].child)} no es compatible con {len(var_type['type'].params)}")
+                    create_error(
+                        node.lexema, node.line, "Invalid number of parameters")
                     return False
 
                 for i, child in enumerate(node.child[0].child):
-                    print("CHILD: ", child)
                     type_resp = checking_types(child, scope)
 
-                    print(
-                        f"Compp arando tipos: {var_type['type'].params[i]} y {type_resp.type}")
                     if var_type['type'].params[i] == type_resp.type:
                         pass
                     else:
+                        create_error(
+                            node.lexema, node.line, "Invalid parameter type")
                         return False
-                return type_resp.type
+
+                return var_type['type']
             else:
-                print(
-                    f"NO tipos: y {node.token}")
-                print(scope_stack[0])
                 var_type = scope_stack[0].get(node.lexema, None)
-                print(
-                    f"var_type: {var_type}, tipo: {var_type['type']}")
                 if var_type['type'].params:
+                    create_error(
+                        node.lexema, node.line, "Invalid number of parameters")
                     return False
                 else:
                     return VarType(var_type['type'].type, None)
 
         for child in node.child:
             type_resp = checking_types(child, scope)
-            print(
-                f"Tipo de nodo hijo: {child.token}, Tipo de respuesta: {type_resp}")
             if not type_resp:
+                create_error(
+                    node.lexema, node.line, "Invalid expression")
                 return False
 
     elif node.token == TokenType.ID:
-        print("======================================================")
-        print(scope_info[scope])
-        print(f"ID encontrado: {node.lexema}")
-        print(
-            f"Scope actual: {scope_info[scope]['scope'].get(node.lexema, None).get('type', None).type}")
         var_type = scope_info[scope]['scope'].get(node.lexema, None)
         if var_type is None:
             var_type = scope_stack[0].get(node.lexema, None)
             if var_type is None:
+                create_error(node.lexema, node.line, "not defined")
                 return False
 
-        print(f"Tipo de variable: {var_type}")
+        t = var_type.get('type', VarType('error', None))
 
-        return var_type.get('type', VarType('error', None))
+        # print("type: ", t)
+
+        return t
 
     elif node.token == TokenType.ENTERO:
-        print("++++++++++++++++++++++++++++++++++++++++++")
         return VarType('int', None)
 
     return True
@@ -342,7 +371,7 @@ def semantica(ast, imprime):
     annotate_parents(ast)
     scope_info = {}  # Reset scope info to empty hashtable
 
-    def_input = VarType("int", None)
+    def_input = VarType("int", None, [])
     def_output = VarType("void", None, ["int"])
 
     scope_push()

@@ -395,15 +395,21 @@ class Parser:
             elif self.token == TokenType.SUMA or self.token == TokenType.RESTA:
                 n_arr = self.add_exp_tk2()
 
+                n_arr.child[0] = n
+
                 return n_arr
 
             elif self.token == TokenType.MULT or self.token == TokenType.DIV:
                 n_arr = self.add_exp_tk2()
 
+                n_arr.child[0] = n
+
                 return n_arr
 
             elif self.token in comparison_operators:
                 n_arr = self.add_exp_tk2()
+
+                n_arr.child[0] = n
 
                 return n_arr
 
