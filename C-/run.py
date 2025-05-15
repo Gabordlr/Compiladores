@@ -27,6 +27,3 @@ if not ERROR:
         print("---------------- Compilacion ----------------")
         # Generar el código ensamblador
         pass
-
-    if ERROR:
-        print("Error en la semantica")
