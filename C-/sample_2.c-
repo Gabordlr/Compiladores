@@ -1,27 +1,40 @@
-void gcd (void, int a, int b []){
+int run(int a, int b){
+    a = a + b;
+}
+
+int come(int a, int b){
+    a =  a + b;
+}
+
+void gcd (int al, int b [], int p){
     
     int a[4];
-
-    void b; 
+    void b;
+    int lol;
+    int j;
+    int c;
 
     9;
 
-    a[1 + 4] = 1 > 2;
+    a[2] = 1 + 2 * 4 / 5 * lol / (4 < 1);
 
-    a[4] = codo + 1 + 2 * 4 / 5  * lol * (4 < 1);
-
-    b = run(j, come(j, a <= p))
+    j = run(j, come(j, c <= p))
 
     if (c >  3)
         c = 4;
     else
         c = 5;
-
-    while (a > 0)
+    while (a[0] > 0)
         c = c - 1;
 
-    return c;
-
+    return ;
 }
+
+int main(void){
+    int a;
+}
+
+
+
 int val [9];
 

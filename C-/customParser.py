@@ -386,8 +386,6 @@ class Parser:
         n = self.opp_varint_tk()
 
         if n:
-            n_child = self.create_node(self.token, self.token_lexema)
-
             if self.token == TokenType.SEMICOLON:
                 self.match([TokenType.SEMICOLON])
                 return n
@@ -477,14 +475,15 @@ class Parser:
         Returns:
             Node: Devuelve un nodo que representa la multiplicacion
         """
-        n_op = self.create_node(self.prev_token, self.prev_token_lexema)
         n = self.opp_varint_tk()
 
         if self.token == TokenType.MULT or self.token == TokenType.DIV:
             n_op2 = self.create_node(self.token, self.token_lexema)
             self.match([TokenType.MULT, TokenType.DIV])
             n_op2.child.append(n)
-            n_op2.child.append(self.factor_tk())
+            fact = self.factor_tk()
+
+            n_op2.child.append(fact)
 
             return n_op2
 
@@ -493,13 +492,6 @@ class Parser:
             return None
 
         return n
-
-        # while self.token == TokenType.MULT or self.token == TokenType.DIV:
-        #     n_head = self.create_node(self.token, self.token_lexema)
-        #     self.match([TokenType.MULT, TokenType.DIV])
-        #     n_child = self.factor_tk()
-
-        #     n_head.child = [n, n_child]
 
     def factor_tk(self):
         """Funcion para procesar un factor
@@ -511,39 +503,28 @@ class Parser:
 
         if self.token == TokenType.POPEN:
             n = self.create_node("paren", "paren")
-            n_open = self.create_node(self.token, self.token_lexema)
             self.match([TokenType.POPEN])
             n_child = self.exp_tk()
 
             if self.token == TokenType.PCLOSE:
-                n_close = self.create_node(self.token, self.token_lexema)
                 self.match([TokenType.PCLOSE])
-                n.child = [n_child]
 
                 n_new = self.term_exp_tk()
 
-                n.child.append(n_new)
+                if n_new:
+                    n_child.child.append(n_new)
 
-                return n
+                return n_child
 
         elif self.token == TokenType.ID:
-            n_child = self.var_call_tk()
-
             n_new = self.term_exp_tk()
 
-            n_child.child.append(n_new)
-            n_child.child.insert(0, n)
-
-            return n_child
+            return n_new
 
         elif self.token == TokenType.ENTERO:
-            n_child = self.decimal_tk()
             n_new = self.term_exp_tk()
 
-            n_child.child.append(n_new)
-            n_child.child.insert(0, n)
-
-            return n_child
+            return n_new
 
         return n
 

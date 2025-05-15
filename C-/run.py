@@ -2,7 +2,7 @@
 
 from globalTypes import *
 from customParser import *
-from mainSemantica import *
+from analizer import *
 
 f = open('sample.c-', 'r')
 programa = f.read()
@@ -21,4 +21,12 @@ AST, ERROR = parser(False)
 
 if not ERROR:
     print("---------------- Semantica ----------------")
-    semantica(AST, True)
+    ERROR = semantica(AST, False)
+
+    if not ERROR:
+        print("---------------- Compilacion ----------------")
+        # Generar el código ensamblador
+        pass
+
+    if ERROR:
+        print("Error en la semantica")
